@@ -205,7 +205,6 @@
   }
   .item.checked .item-name {
     color: var(--muted);
-    text-decoration: line-through;
   }
   .item.custom .item-name::after {
     content: "ny";
@@ -587,7 +586,7 @@
       return;
     }
     const isDefault = defaultNames.some(n => n.toLowerCase() === trimmed.toLowerCase());
-    items.push({ name: trimmed, checked: false, custom: !isDefault });
+    items.push({ name: trimmed, checked: !isDefault, custom: !isDefault });
     sortItems();
     saveItems();
     addToHistory(trimmed);
