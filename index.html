@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#2f9e44">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Indkøbsliste">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Indkøbsliste</title>
+<style>
+  :root {
+    --green: #2f9e44;
+    --green-dark: #237a35;
+    --bg: #f5f6f5;
+    --card: #ffffff;
+    --text: #1c1c1c;
+    --muted: #8a8f8a;
+    --border: #e3e5e2;
+    --danger: #d6453d;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    padding-bottom: 90px;
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, var(--green), var(--green-dark));
+    color: #fff;
+    padding: 22px 18px 18px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+  }
+  .header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  header h1 {
+    margin: 0 0 2px;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+  header p {
+    margin: 0;
+    font-size: 0.82rem;
+    opacity: 0.85;
+  }
+  .gear-btn {
+    background: rgba(255,255,255,0.18);
+    border: none;
+    color: #fff;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    font-size: 1.15rem;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .gear-btn:active {
+    background: rgba(255,255,255,0.3);
+  }
+  .stats {
+    margin-top: 10px;
+    font-size: 0.82rem;
+    opacity: 0.95;
+  }
+  main {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 14px 12px 0;
+  }
+  .add-bar-wrap {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 9;
+    padding: 10px 0 0;
+  }
+  .add-bar {
+    display: flex;
+    gap: 8px;
+    position: relative;
+  }
+  .add-bar input[type="text"] {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    font-size: 1rem;
+    background: var(--card);
+    outline: none;
+  }
+  .add-bar input[type="text"]:focus {
+    border-color: var(--green);
+  }
+  .add-bar button {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0 18px;
+    font-size: 1.4rem;
+    font-weight: 600;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .add-bar button:active {
+    background: var(--green-dark);
+  }
+  .suggestions {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 54px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    overflow: hidden;
+    z-index: 12;
+    display: none;
+  }
+  .suggestions.show { display: block; }
+  .suggestion-item {
+    padding: 11px 14px;
+    font-size: 0.96rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+  }
+  .suggestion-item:last-child { border-bottom: none; }
+  .suggestion-item:active, .suggestion-item.highlight {
+    background: #eef6ef;
+  }
+  .suggestion-item b {
+    color: var(--green-dark);
+  }
+  ul.list {
+    list-style: none;
+    margin: 6px 0 16px;
+    padding: 0;
+    background: var(--card);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  li.item {
+    display: flex;
+    align-items: center;
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+  li.item:last-child {
+    border-bottom: none;
+  }
+  .checkbox {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 2px solid #c7cbc6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .checkbox.checked {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .checkbox svg {
+    width: 14px;
+    height: 14px;
+    stroke: #fff;
+    stroke-width: 3;
+    fill: none;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.15s ease;
+  }
+  .checkbox.checked svg {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .item-name {
+    flex: 1;
+    font-size: 1.02rem;
+    transition: color 0.15s ease;
+  }
+  .item.checked .item-name {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+  .item.custom .item-name::after {
+    content: "ny";
+    margin-left: 8px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--green-dark);
+    background: #e6f4ea;
+    padding: 2px 6px;
+    border-radius: 6px;
+    vertical-align: middle;
+  }
+  .remove-btn {
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 1.3rem;
+    line-height: 1;
+    padding: 4px 6px;
+    cursor: pointer;
+  }
+  .empty-hint {
+    text-align: center;
+    color: var(--muted);
+    padding: 30px 10px;
+    font-size: 0.9rem;
+  }
+  .section-title {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 16px 4px 6px;
+    font-weight: 700;
+  }
+  .actions {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    display: flex;
+    justify-content: center;
+  }
+  .clear-btn {
+    width: 100%;
+    max-width: 532px;
+    background: #fdecea;
+    color: var(--danger);
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    font-size: 0.98rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .clear-btn:active {
+    background: #f9d4d1;
+  }
+
+  /* Settings modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 50;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--bg);
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    border-radius: 18px 18px 0 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-header {
+    background: var(--card);
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+  .modal-close {
+    border: none;
+    background: var(--bg);
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: var(--text);
+  }
+  .modal-body {
+    overflow-y: auto;
+    padding: 12px 16px 16px;
+    flex: 1;
+  }
+  .modal-hint {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .defaults-add {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .defaults-add input {
+    flex: 1;
+    padding: 11px 13px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 0.96rem;
+  }
+  .defaults-add button {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0 16px;
+    font-size: 1.3rem;
+    cursor: pointer;
+  }
+  ul.defaults-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: var(--card);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  ul.defaults-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+  ul.defaults-list li:last-child { border-bottom: none; }
+  ul.defaults-list .remove-btn {
+    color: var(--danger);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div>
+      <h1>🛒 Indkøbsliste</h1>
+      <p>Tilføj varer, sæt hak når de er i kurven</p>
+    </div>
+    <button class="gear-btn" id="settingsBtn" aria-label="Rediger fast liste">⚙️</button>
+  </div>
+  <div class="stats" id="stats"></div>
+</header>
+
+<main>
+  <div class="add-bar-wrap">
+    <div class="add-bar">
+      <input type="text" id="newItemInput" placeholder="Tilføj vare..." autocomplete="off">
+      <button id="addBtn" aria-label="Tilføj">+</button>
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+  </div>
+
+  <div class="section-title">Varer</div>
+  <ul class="list" id="itemList"></ul>
+  <div class="empty-hint" id="emptyHint" style="display:none;">Listen er tom – tilføj en vare ovenfor.</div>
+</main>
+
+<div class="actions">
+  <button class="clear-btn" id="clearBtn">Ryd liste</button>
+</div>
+
+<div class="modal-overlay" id="settingsOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Fast liste (50 varer)</h2>
+      <button class="modal-close" id="settingsCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-hint">Dette er dine egne faste varer, som altid er klar på listen. Tilføj eller fjern, som du vil.</p>
+      <div class="defaults-add">
+        <input type="text" id="newDefaultInput" placeholder="Ny fast vare..." autocomplete="off">
+        <button id="addDefaultBtn">+</button>
+      </div>
+      <ul class="defaults-list" id="defaultsList"></ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = "indkoebsliste-v1";
+  const DEFAULTS_KEY = "indkoebsliste-defaults-v1";
+  const HISTORY_KEY = "indkoebsliste-history-v1";
+
+  const builtInDefaults = [
+    "Agurk","Appelsiner","Bacon","Bananer","Brød","Chokolade","Citron",
+    "Creme fraiche","Fiskefilet","Fløde","Gulerødder","Hakket kød","Havregryn",
+    "Hvidløg","Kaffe","Kakao","Kartofler","Kylling","Køkkenrulle","Leverpostej",
+    "Løg","Mel","Müsli","Mælk","Olie","Opvaskemiddel","Ost","Pasta","Peber",
+    "Pålæg","Rejer","Ris","Rugbrød","Salat","Salt","Shampoo","Skyr","Slik",
+    "Smør","Sodavand","Sukker","Sæbe","Tandpasta","Te","Toiletpapir","Tomater",
+    "Vaskepulver","Yoghurt","Æbler","Æg"
+  ];
+
+  function daSort(arr) {
+    arr.sort((a, b) => a.localeCompare(b, "da"));
+    return arr;
+  }
+
+  function loadDefaults() {
+    try {
+      const raw = localStorage.getItem(DEFAULTS_KEY);
+      if (!raw) return daSort(builtInDefaults.slice());
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed) || parsed.length === 0) return daSort(builtInDefaults.slice());
+      return daSort(parsed);
+    } catch (e) {
+      return daSort(builtInDefaults.slice());
+    }
+  }
+
+  function saveDefaults() {
+    localStorage.setItem(DEFAULTS_KEY, JSON.stringify(defaultNames));
+  }
+
+  function loadHistory() {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveHistory() {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  }
+
+  function addToHistory(name) {
+    const exists = history.some(h => h.toLowerCase() === name.toLowerCase());
+    if (!exists) {
+      history.push(name);
+      saveHistory();
+    }
+  }
+
+  function loadItems() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveItems() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }
+
+  function sortItems() {
+    items.sort((a, b) => a.name.localeCompare(b.name, "da"));
+  }
+
+  // Ensures items reflect the current set of default names:
+  // adds missing defaults, removes unchecked defaults that were deleted from the list.
+  function syncItemsWithDefaults() {
+    defaultNames.forEach(name => {
+      const exists = items.some(i => i.name.toLowerCase() === name.toLowerCase());
+      if (!exists) items.push({ name, checked: false, custom: false });
+    });
+    items = items.filter(i => {
+      if (i.custom) return true;
+      return defaultNames.some(name => name.toLowerCase() === i.name.toLowerCase());
+    });
+    sortItems();
+    saveItems();
+  }
+
+  let defaultNames = loadDefaults();
+  let history = loadHistory();
+  defaultNames.forEach(n => addToHistory(n));
+  let items = loadItems();
+  syncItemsWithDefaults();
+
+  const listEl = document.getElementById("itemList");
+  const statsEl = document.getElementById("stats");
+  const emptyHint = document.getElementById("emptyHint");
+  const input = document.getElementById("newItemInput");
+  const suggestionsEl = document.getElementById("suggestions");
+
+  function render() {
+    listEl.innerHTML = "";
+    emptyHint.style.display = items.length === 0 ? "block" : "none";
+
+    items.forEach((item, index) => {
+      const li = document.createElement("li");
+      li.className = "item" + (item.checked ? " checked" : "") + (item.custom ? " custom" : "");
+
+      const box = document.createElement("div");
+      box.className = "checkbox" + (item.checked ? " checked" : "");
+      box.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+      box.addEventListener("click", () => toggleItem(index));
+
+      const name = document.createElement("div");
+      name.className = "item-name";
+      name.textContent = item.name;
+      name.addEventListener("click", () => toggleItem(index));
+
+      li.appendChild(box);
+      li.appendChild(name);
+
+      if (item.custom) {
+        const removeBtn = document.createElement("button");
+        removeBtn.className = "remove-btn";
+        removeBtn.innerHTML = "&times;";
+        removeBtn.setAttribute("aria-label", "Slet vare");
+        removeBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          removeItem(index);
+        });
+        li.appendChild(removeBtn);
+      }
+
+      listEl.appendChild(li);
+    });
+
+    const checkedCount = items.filter(i => i.checked).length;
+    statsEl.textContent = items.length
+      ? checkedCount + " af " + items.length + " i kurven"
+      : "Ingen varer endnu";
+  }
+
+  function toggleItem(index) {
+    items[index].checked = !items[index].checked;
+    saveItems();
+    render();
+  }
+
+  function removeItem(index) {
+    items.splice(index, 1);
+    saveItems();
+    render();
+  }
+
+  function addItem(name) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const exists = items.some(i => i.name.toLowerCase() === trimmed.toLowerCase());
+    if (exists) {
+      input.value = "";
+      hideSuggestions();
+      return;
+    }
+    const isDefault = defaultNames.some(n => n.toLowerCase() === trimmed.toLowerCase());
+    items.push({ name: trimmed, checked: false, custom: !isDefault });
+    sortItems();
+    saveItems();
+    addToHistory(trimmed);
+    render();
+    input.value = "";
+    hideSuggestions();
+    input.focus();
+  }
+
+  // ---- Autocomplete ----
+  function getSuggestions(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const currentNames = new Set(items.map(i => i.name.toLowerCase()));
+    return history
+      .filter(h => h.toLowerCase().includes(q) && !currentNames.has(h.toLowerCase()))
+      .sort((a, b) => {
+        const aStarts = a.toLowerCase().startsWith(q) ? 0 : 1;
+        const bStarts = b.toLowerCase().startsWith(q) ? 0 : 1;
+        if (aStarts !== bStarts) return aStarts - bStarts;
+        return a.localeCompare(b, "da");
+      })
+      .slice(0, 6);
+  }
+
+  function highlightMatch(name, query) {
+    const idx = name.toLowerCase().indexOf(query.toLowerCase());
+    if (idx === -1) return name;
+    return name.slice(0, idx) + "<b>" + name.slice(idx, idx + query.length) + "</b>" + name.slice(idx + query.length);
+  }
+
+  function renderSuggestions() {
+    const query = input.value;
+    const matches = getSuggestions(query);
+    if (matches.length === 0) {
+      hideSuggestions();
+      return;
+    }
+    suggestionsEl.innerHTML = "";
+    matches.forEach(name => {
+      const div = document.createElement("div");
+      div.className = "suggestion-item";
+      div.innerHTML = highlightMatch(name, query);
+      div.addEventListener("click", () => addItem(name));
+      suggestionsEl.appendChild(div);
+    });
+    suggestionsEl.classList.add("show");
+  }
+
+  function hideSuggestions() {
+    suggestionsEl.classList.remove("show");
+    suggestionsEl.innerHTML = "";
+  }
+
+  input.addEventListener("input", renderSuggestions);
+  input.addEventListener("focus", renderSuggestions);
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".add-bar")) hideSuggestions();
+  });
+
+  document.getElementById("addBtn").addEventListener("click", () => addItem(input.value));
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addItem(input.value);
+    if (e.key === "Escape") hideSuggestions();
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    const ok = confirm("Ryd listen? Alle hak fjernes, og varer du selv har tilføjet bliver slettet. De faste varer bevares til næste gang.");
+    if (!ok) return;
+    items = [];
+    syncItemsWithDefaults();
+    render();
+  });
+
+  // ---- Settings: edit the 50 default items ----
+  const settingsOverlay = document.getElementById("settingsOverlay");
+  const defaultsListEl = document.getElementById("defaultsList");
+  const newDefaultInput = document.getElementById("newDefaultInput");
+
+  function renderDefaultsEditor() {
+    defaultsListEl.innerHTML = "";
+    defaultNames.forEach((name, index) => {
+      const li = document.createElement("li");
+      const span = document.createElement("span");
+      span.textContent = name;
+      const removeBtn = document.createElement("button");
+      removeBtn.className = "remove-btn";
+      removeBtn.innerHTML = "&times;";
+      removeBtn.setAttribute("aria-label", "Fjern fra fast liste");
+      removeBtn.addEventListener("click", () => removeDefault(index));
+      li.appendChild(span);
+      li.appendChild(removeBtn);
+      defaultsListEl.appendChild(li);
+    });
+  }
+
+  function addDefault(name) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const exists = defaultNames.some(n => n.toLowerCase() === trimmed.toLowerCase());
+    if (exists) {
+      newDefaultInput.value = "";
+      return;
+    }
+    defaultNames.push(trimmed);
+    daSort(defaultNames);
+    saveDefaults();
+    addToHistory(trimmed);
+    renderDefaultsEditor();
+    syncItemsWithDefaults();
+    render();
+    newDefaultInput.value = "";
+    newDefaultInput.focus();
+  }
+
+  function removeDefault(index) {
+    defaultNames.splice(index, 1);
+    saveDefaults();
+    renderDefaultsEditor();
+    syncItemsWithDefaults();
+    render();
+  }
+
+  document.getElementById("settingsBtn").addEventListener("click", () => {
+    renderDefaultsEditor();
+    settingsOverlay.classList.add("show");
+  });
+  document.getElementById("settingsCloseBtn").addEventListener("click", () => {
+    settingsOverlay.classList.remove("show");
+  });
+  settingsOverlay.addEventListener("click", (e) => {
+    if (e.target === settingsOverlay) settingsOverlay.classList.remove("show");
+  });
+  document.getElementById("addDefaultBtn").addEventListener("click", () => addDefault(newDefaultInput.value));
+  newDefaultInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addDefault(newDefaultInput.value);
+  });
+
+  render();
+
+  // ---- PWA: register service worker ----
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
