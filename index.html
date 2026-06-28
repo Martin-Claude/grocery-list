@@ -520,7 +520,14 @@
     listEl.innerHTML = "";
     emptyHint.style.display = items.length === 0 ? "block" : "none";
 
-    items.forEach((item, index) => {
+    const displayOrder = items
+      .map((item, index) => ({ item, index }))
+      .sort((a, b) => {
+        if (a.item.checked !== b.item.checked) return a.item.checked ? -1 : 1;
+        return a.item.name.localeCompare(b.item.name, "da");
+      });
+
+    displayOrder.forEach(({ item, index }) => {
       const li = document.createElement("li");
       li.className = "item" + (item.checked ? " checked" : "") + (item.custom ? " custom" : "");
 
